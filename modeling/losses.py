@@ -1,6 +1,7 @@
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
+import torch.nn.functional as F
+
 from modeling.vgg import Vgg19
 from utils.image_processing import gram, rgb_to_yuv
 
@@ -17,9 +18,11 @@ class ColorLoss(nn.Module):
 
         # After convert to yuv, both images have channel last
 
-        return (self.l1(image[:, :, :, 0], image_g[:, :, :, 0]) +
-                self.huber(image[:, :, :, 1], image_g[:, :, :, 1]) +
-                self.huber(image[:, :, :, 2], image_g[:, :, :, 2]))
+        return (
+            self.l1(image[:, :, :, 0], image_g[:, :, :, 0])
+            + self.huber(image[:, :, :, 1], image_g[:, :, :, 1])
+            + self.huber(image[:, :, :, 2], image_g[:, :, :, 2])
+        )
 
 
 class AnimeGanLoss:
@@ -37,7 +40,7 @@ class AnimeGanLoss:
         self.bce_loss = nn.BCELoss()
 
     def compute_loss_G(self, fake_img, img, fake_logit, anime_gray):
-        '''
+        """
         Compute loss for Generator
 
         @Arugments:
@@ -48,7 +51,7 @@ class AnimeGanLoss:
 
         @Returns:
             loss
-        '''
+        """
         fake_feat = self.vgg19(fake_img)
         anime_feat = self.vgg19(anime_gray)
         img_feat = self.vgg19(img).detach()
@@ -60,14 +63,15 @@ class AnimeGanLoss:
             self.wcol * self.color_loss(img, fake_img),
         ]
 
-    def compute_loss_D(self, fake_img_d, real_anime_d, real_anime_gray_d, real_anime_smooth_gray_d):
+    def compute_loss_D(
+        self, fake_img_d, real_anime_d, real_anime_gray_d, real_anime_smooth_gray_d
+    ):
         return self.wadvd * (
-            self.adv_loss_d_real(real_anime_d) +
-            self.adv_loss_d_fake(fake_img_d) +
-            self.adv_loss_d_fake(real_anime_gray_d) +
-            0.2 * self.adv_loss_d_fake(real_anime_smooth_gray_d)
+            self.adv_loss_d_real(real_anime_d)
+            + self.adv_loss_d_fake(fake_img_d)
+            + self.adv_loss_d_fake(real_anime_gray_d)
+            + 0.2 * self.adv_loss_d_fake(real_anime_smooth_gray_d)
         )
-
 
     def content_loss_vgg(self, image, recontruction):
         feat = self.vgg19(image)
@@ -76,41 +80,40 @@ class AnimeGanLoss:
         return self.content_loss(feat, re_feat)
 
     def adv_loss_d_real(self, pred):
-        if self.adv_type == 'hinge':
+        if self.adv_type == "hinge":
             return torch.mean(F.relu(1.0 - pred))
 
-        elif self.adv_type == 'lsgan':
+        elif self.adv_type == "lsgan":
             return torch.mean(torch.square(pred - 1.0))
 
-        elif self.adv_type == 'normal':
+        elif self.adv_type == "normal":
             return self.bce_loss(pred, torch.ones_like(pred))
 
-        raise ValueError(f'Do not support loss type {self.adv_type}')
+        raise ValueError(f"Do not support loss type {self.adv_type}")
 
     def adv_loss_d_fake(self, pred):
-        if self.adv_type == 'hinge':
+        if self.adv_type == "hinge":
             return torch.mean(F.relu(1.0 + pred))
 
-        elif self.adv_type == 'lsgan':
+        elif self.adv_type == "lsgan":
             return torch.mean(torch.square(pred))
 
-        elif self.adv_type == 'normal':
+        elif self.adv_type == "normal":
             return self.bce_loss(pred, torch.zeros_like(pred))
 
-        raise ValueError(f'Do not support loss type {self.adv_type}')
-
+        raise ValueError(f"Do not support loss type {self.adv_type}")
 
     def adv_loss_g(self, pred):
-        if self.adv_type == 'hinge':
+        if self.adv_type == "hinge":
             return -torch.mean(pred)
 
-        elif self.adv_type == 'lsgan':
+        elif self.adv_type == "lsgan":
             return torch.mean(torch.square(pred - 1.0))
 
-        elif self.adv_type == 'normal':
+        elif self.adv_type == "normal":
             return self.bce_loss(pred, torch.zeros_like(pred))
 
-        raise ValueError(f'Do not support loss type {self.adv_type}')
+        raise ValueError(f"Do not support loss type {self.adv_type}")
 
 
 class LossSummary:
@@ -143,7 +146,6 @@ class LossSummary:
 
     def avg_loss_D(self):
         return self._avg(self.loss_d_adv)
-
 
     @staticmethod
     def _avg(losses):

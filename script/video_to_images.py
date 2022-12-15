@@ -1,30 +1,36 @@
 """
 Convert each frame in a anime video to 256 x 256 images
 """
-import cv2
-import os
-import numpy as np
 import argparse
+import os
+
+import numpy as np
+from cv2 import cv2
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from tqdm import tqdm
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--video-path', type=str, default='/home/ubuntu/Downloads/kimetsu_yaiba.mp4')
-    parser.add_argument('--save-path', type=str, default='./script/test_crop')
-    parser.add_argument('--max-image', type=int, default=1800)
-    parser.add_argument('--start', type=int, default=0)
-    parser.add_argument('--end', type=int, default=0)
-    parser.add_argument('--image-size', type=int, default=256)
+    parser.add_argument(
+        "--video-path", type=str, default="/home/ubuntu/Downloads/kimetsu_yaiba.mp4"
+    )
+    parser.add_argument("--save-path", type=str, default="./script/test_crop")
+    parser.add_argument("--max-image", type=int, default=1800)
+    parser.add_argument("--start", type=int, default=0)
+    parser.add_argument("--end", type=int, default=0)
+    parser.add_argument("--image-size", type=int, default=256)
 
     return parser.parse_args()
 
 
 class VideoConverter:
-    def __init__(self, video_path, save_dir, max_image=1600, start=0, end=0, image_size=256):
+    def __init__(
+        self, video_path, save_dir, max_image=1600, start=0, end=0, image_size=256
+    ):
         os.makedirs(save_dir, exist_ok=True)
 
-        assert os.path.isfile(video_path), f'{video_path} must be a video file'
+        assert os.path.isfile(video_path), f"{video_path} must be a video file"
 
         self.save_dir = save_dir
         self.video_path = video_path
@@ -35,12 +41,12 @@ class VideoConverter:
         self.image_size = image_size
 
     def crop_and_save(self, image):
-        '''
+        """
         Crop a large image into smaller images of given size
 
         @Returns:
             - True if counter reach max_image
-        '''
+        """
 
         height, width, _ = image.shape
 
@@ -55,10 +61,10 @@ class VideoConverter:
                 start_y = c * self.image_size
                 end_y = start_y + self.image_size
                 # print(f'x: [{start_x}:{end_x}], y: [{start_y}:{end_y}]')
-                sub_im = image[start_x: end_x, start_y: end_y, :]
+                sub_im = image[start_x:end_x, start_y:end_y, :]
 
                 if np.std(sub_im) > 25.0:
-                    save_path = os.path.join(self.save_dir, f'{self.counter}.jpg')
+                    save_path = os.path.join(self.save_dir, f"{self.counter}.jpg")
                     cv2.imwrite(save_path, sub_im)
                     self.counter += 1
 
@@ -68,9 +74,9 @@ class VideoConverter:
         return False
 
     def process(self):
-        '''
+        """
         Process video
-        '''
+        """
         video_clip = VideoFileClip(self.video_path)
         if self.start or self.end:
             video_clip = video_clip.subclip(self.start, self.end)
@@ -78,7 +84,9 @@ class VideoConverter:
         video_clip = video_clip.set_fps(video_clip.fps // 10)
 
         total_frames = round(video_clip.fps * video_clip.duration)
-        print(f'Processing video {self.video_path}, {total_frames} frames, size: {video_clip.size}')
+        print(
+            f"Processing video {self.video_path}, {total_frames} frames, size: {video_clip.size}"
+        )
 
         for frame in tqdm(video_clip.iter_frames()):
             # It's better if we resizing before crop to keep the image looks more 'scene'
@@ -88,15 +96,14 @@ class VideoConverter:
             w /= ratio
             h = w / aspect_ratio
 
-            frame = cv2.resize(frame[...,::-1], (int(h) , int(w)))
+            frame = cv2.resize(frame[..., ::-1], (int(h), int(w)))
             if self.crop_and_save(frame):
                 break
 
-        print(f'Saved {self.counter} images to {self.save_dir}')
+        print(f"Saved {self.counter} images to {self.save_dir}")
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
 
     args = parse_args()
     converter = VideoConverter(
@@ -105,7 +112,7 @@ if __name__ == '__main__':
         max_image=args.max_image,
         start=args.start,
         end=args.end,
-        image_size=args.image_size
-        )
+        image_size=args.image_size,
+    )
 
     converter.process()

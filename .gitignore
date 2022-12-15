@@ -4,3 +4,6 @@
 dataset
 spirit.away
 .DS_Store
+
+.venv/
+.idea/

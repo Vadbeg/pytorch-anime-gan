@@ -1,19 +1,21 @@
-
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils import spectral_norm
-from modeling.conv_blocks import DownConv
-from modeling.conv_blocks import UpConv
-from modeling.conv_blocks import SeparableConv2D
-from modeling.conv_blocks import InvertedResBlock
-from modeling.conv_blocks import ConvBlock
+
+from modeling.conv_blocks import (
+    ConvBlock,
+    DownConv,
+    InvertedResBlock,
+    SeparableConv2D,
+    UpConv,
+)
 from utils.common import initialize_weights
 
 
 class Generator(nn.Module):
-    def __init__(self, dataset=''):
+    def __init__(self, dataset=""):
         super(Generator, self).__init__()
-        self.name = f'generator_{dataset}'
+        self.name = f"generator_{dataset}"
         bias = False
 
         self.encode_blocks = nn.Sequential(
@@ -60,29 +62,45 @@ class Generator(nn.Module):
 
 
 class Discriminator(nn.Module):
-    def __init__(self,  args):
+    def __init__(self, args):
         super(Discriminator, self).__init__()
-        self.name = f'discriminator_{args.dataset}'
+        self.name = f"discriminator_{args.dataset}"
         self.bias = False
         channels = 32
 
         layers = [
             nn.Conv2d(3, channels, kernel_size=3, stride=1, padding=1, bias=self.bias),
-            nn.LeakyReLU(0.2, True)
+            nn.LeakyReLU(0.2, True),
         ]
 
         for i in range(args.d_layers):
             layers += [
-                nn.Conv2d(channels, channels * 2, kernel_size=3, stride=2, padding=1, bias=self.bias),
+                nn.Conv2d(
+                    channels,
+                    channels * 2,
+                    kernel_size=3,
+                    stride=2,
+                    padding=1,
+                    bias=self.bias,
+                ),
                 nn.LeakyReLU(0.2, True),
-                nn.Conv2d(channels * 2, channels * 4, kernel_size=3, stride=1, padding=1, bias=self.bias),
+                nn.Conv2d(
+                    channels * 2,
+                    channels * 4,
+                    kernel_size=3,
+                    stride=1,
+                    padding=1,
+                    bias=self.bias,
+                ),
                 nn.InstanceNorm2d(channels * 4),
                 nn.LeakyReLU(0.2, True),
             ]
             channels *= 4
 
         layers += [
-            nn.Conv2d(channels, channels, kernel_size=3, stride=1, padding=1, bias=self.bias),
+            nn.Conv2d(
+                channels, channels, kernel_size=3, stride=1, padding=1, bias=self.bias
+            ),
             nn.InstanceNorm2d(channels),
             nn.LeakyReLU(0.2, True),
             nn.Conv2d(channels, 1, kernel_size=3, stride=1, padding=1, bias=self.bias),
