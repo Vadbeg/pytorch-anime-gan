@@ -69,7 +69,7 @@ class InvertedResBlock(nn.Module):
         return out
 
 
-class Generator(nn.Module):
+class AnimeGanV2Generator(nn.Module):
     def __init__(
         self,
     ):
