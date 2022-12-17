@@ -22,6 +22,7 @@ gaussian_std = torch.tensor(0.1)
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset", type=str, default="Hayao")
+    parser.add_argument("--device", type=int, default=-1)
     parser.add_argument("--data-dir", type=str, default="/content/dataset")
     parser.add_argument("--epochs", type=int, default=100)
     parser.add_argument("--init-epochs", type=int, default=5)
@@ -85,7 +86,9 @@ def check_params(args):
     }, f"{args.gan_loss} is not supported"
 
 
-def save_samples(generator, loader, args, max_imgs=2, subname="gen"):
+def save_samples(
+    generator, loader, args, max_imgs=2, subname="gen", device=torch.device("cpu")
+):
     """
     Generate and save images
     """
@@ -96,7 +99,7 @@ def save_samples(generator, loader, args, max_imgs=2, subname="gen"):
 
     for i, (img, *_) in enumerate(loader):
         with torch.no_grad():
-            fake_img = generator(img.cuda())
+            fake_img = generator(img.to(device))
             fake_img = fake_img.detach().cpu().numpy()
             # Channel first -> channel last
             fake_img = fake_img.transpose(0, 2, 3, 1)
@@ -121,12 +124,14 @@ def main(args):
 
     print("Init models...")
 
-    G = Generator(args.dataset).cuda()
-    D = Discriminator(args).cuda()
+    device = torch.device(f"cuda:{args.device}" if args.device >= 0 else "cpu")
+
+    G = Generator(args.dataset).to(device)
+    D = Discriminator(args).to(device)
 
     loss_tracker = LossSummary()
 
-    loss_fn = AnimeGanLoss(args)
+    loss_fn = AnimeGanLoss(args, device=device)
 
     # Create DataLoader
     data_loader = DataLoader(
@@ -169,7 +174,7 @@ def main(args):
             # Train with content loss only
             set_lr(optimizer_g, args.init_lr)
             for img, *_ in bar:
-                img = img.cuda()
+                img = img.to(device)
 
                 optimizer_g.zero_grad()
 
@@ -186,16 +191,16 @@ def main(args):
 
             set_lr(optimizer_g, args.lr_g)
             save_checkpoint(G, optimizer_g, epoch_num, args, posfix="_init")
-            save_samples(G, data_loader, args, subname="initg")
+            save_samples(G, data_loader, args, subname="initg", device=device)
             continue
 
         loss_tracker.reset()
         for img, anime, anime_gray, anime_smt_gray in bar:
             # To cuda
-            img = img.cuda()
-            anime = anime.cuda()
-            anime_gray = anime_gray.cuda()
-            anime_smt_gray = anime_smt_gray.cuda()
+            img = img.to(device)
+            anime = anime.to(device)
+            anime_gray = anime_gray.to(device)
+            anime_smt_gray = anime_smt_gray.to(device)
 
             # ---------------- TRAIN D ---------------- #
             optimizer_d.zero_grad()
@@ -248,7 +253,7 @@ def main(args):
         if epoch_num % args.save_interval == 0:
             save_checkpoint(G, optimizer_g, epoch_num, args)
             save_checkpoint(D, optimizer_d, epoch_num, args)
-            save_samples(G, data_loader, args)
+            save_samples(G, data_loader, args, device=device)
 
 
 if __name__ == "__main__":

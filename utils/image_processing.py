@@ -13,9 +13,6 @@ _rgb_to_yuv_kernel = torch.tensor(
     ]
 ).float()
 
-if torch.cuda.is_available():
-    _rgb_to_yuv_kernel = _rgb_to_yuv_kernel.cuda()
-
 
 def gram(input):
     """
@@ -33,7 +30,7 @@ def gram(input):
     return G.div(b * c * w * h)
 
 
-def rgb_to_yuv(image):
+def rgb_to_yuv(image, device):
     """
     https://en.wikipedia.org/wiki/YUV
 
@@ -42,7 +39,9 @@ def rgb_to_yuv(image):
     # -1 1 -> 0 1
     image = (image + 1.0) / 2.0
 
-    yuv_img = torch.tensordot(image, _rgb_to_yuv_kernel, dims=([image.ndim - 3], [0]))
+    yuv_img = torch.tensordot(
+        image, _rgb_to_yuv_kernel.to(device), dims=([image.ndim - 3], [0])
+    )
 
     return yuv_img
 

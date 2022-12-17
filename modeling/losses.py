@@ -13,8 +13,8 @@ class ColorLoss(nn.Module):
         self.huber = nn.SmoothL1Loss()
 
     def forward(self, image, image_g):
-        image = rgb_to_yuv(image)
-        image_g = rgb_to_yuv(image_g)
+        image = rgb_to_yuv(image, device=image_g.device)
+        image_g = rgb_to_yuv(image_g, device=image_g.device)
 
         # After convert to yuv, both images have channel last
 
@@ -26,16 +26,16 @@ class ColorLoss(nn.Module):
 
 
 class AnimeGanLoss:
-    def __init__(self, args):
-        self.content_loss = nn.L1Loss().cuda()
-        self.gram_loss = nn.L1Loss().cuda()
-        self.color_loss = ColorLoss().cuda()
+    def __init__(self, args, device):
+        self.content_loss = nn.L1Loss().to(device)
+        self.gram_loss = nn.L1Loss().to(device)
+        self.color_loss = ColorLoss().to(device)
         self.wadvg = args.wadvg
         self.wadvd = args.wadvd
         self.wcon = args.wcon
         self.wgra = args.wgra
         self.wcol = args.wcol
-        self.vgg19 = Vgg19().cuda().eval()
+        self.vgg19 = Vgg19(device=device).to(device).eval()
         self.adv_type = args.gan_loss
         self.bce_loss = nn.BCELoss()
 

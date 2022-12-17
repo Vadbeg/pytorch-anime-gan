@@ -25,11 +25,12 @@ VALID_FORMATS = {
 
 
 class Transformer:
-    def __init__(self, weight="hayao", add_mean=False):
+    def __init__(self, weight="hayao", add_mean=False, device="cuda"):
         self.G = Generator()
+        self._device = device
 
         if cuda_available:
-            self.G = self.G.cuda()
+            self.G = self.G.to(device)
 
         load_weight(self.G, weight)
         self.G.eval()
@@ -182,7 +183,7 @@ class Transformer:
         images = torch.from_numpy(images)
 
         if cuda_available:
-            images = images.cuda()
+            images = images.to(self._device)
 
         # Add batch dim
         if len(images.shape) == 3:

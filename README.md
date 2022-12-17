@@ -51,24 +51,26 @@ python3 script/edge_smooth.py --dataset Kimetsu --image-size 256
 
 To train the animeGAN from command line, you can run `train.py` as the following:
 
-```bash
-python3 train.py --dataset Hayao\           # Can be Hayao, Shinkai, Kimetsu, Paprika, SummerWar or {your custom data in step 1.2}
-                --batch 6\
-                --init-epochs 4\
-                --checkpoint-dir {ckp_dir}\
-                --save-image-dir {save_img_dir}\
-                --save-interval 1\
-                --gan-loss lsgan\           # one of [lsgan, hinge, bce]
-                --init-lr 0.0001\
-                --lr-g 0.00002\
-                --lr-d 0.00004\
-                --wadvd 10.0\               # Aversarial loss weight for D
-                --wadvg 10.0\               # Aversarial loss weight for G
-                --wcon 1.5\                 # Content loss weight
-                --wgra 3.0\                 # Gram loss weight
-                --wcol 30.0\                # Color loss weight
-                --resume GD\                # if set, G to start from pre-trained G, GD to continue training GAN
-                --use_sn\                   # If set, use spectral normalization, default is False
+```shell
+python train.py --dataset Hayao \
+  --data-dir "/mnt/ssd/v_tsitko/Data/Face2Face/anime-gan/frames_dataset" \
+  --device 1 \
+  --batch 6 \
+  --init-epochs 4 \
+  --checkpoint-dir ./artifacts/checkpoints \
+  --save-image-dir ./artifacts/saved_results \
+  --save-interval 1 \
+  --gan-loss lsgan \
+  --init-lr 0.0001 \
+  --lr-g 0.00002 \
+  --lr-d 0.00004 \
+  --wadvd 10.0 \
+  --wadvg 10.0 \
+  --wcon 1.5 \
+  --wgra 3.0 \
+  --wcol 30.0 \
+  --resume GD \
+  --use_sn
 ```
 
 ### 3. Transform images

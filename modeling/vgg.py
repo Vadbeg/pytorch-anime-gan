@@ -3,18 +3,15 @@ import torch.nn as nn
 import torchvision.models as models
 from numpy.lib.arraysetops import isin
 
-vgg_mean = torch.tensor([0.485, 0.456, 0.406]).float()
-vgg_std = torch.tensor([0.229, 0.224, 0.225]).float()
-
-if torch.cuda.is_available():
-    vgg_std = vgg_std.cuda()
-    vgg_mean = vgg_mean.cuda()
-
 
 class Vgg19(nn.Module):
-    def __init__(self):
+    def __init__(self, device):
         super(Vgg19, self).__init__()
         self.vgg19 = self.get_vgg19().eval()
+
+        vgg_mean = torch.tensor([0.485, 0.456, 0.406]).float().to(device)
+        vgg_std = torch.tensor([0.229, 0.224, 0.225]).float().to(device)
+
         self.mean = vgg_mean.view(-1, 1, 1)
         self.std = vgg_std.view(-1, 1, 1)
 
@@ -70,7 +67,7 @@ if __name__ == "__main__":
     img = img.permute(2, 0, 1)
     img = img.unsqueeze(0)
 
-    vgg = Vgg19()
+    vgg = Vgg19(device="cuda")
 
     feat = vgg(img)
 
