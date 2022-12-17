@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from dataset import AnimeDataSet
-from modeling.anime_gan import Discriminator, Generator
+from modeling.anime_gan import AnimeGanDiscriminator, AnimeGanGenerator
 from modeling.losses import AnimeGanLoss, LossSummary
 from utils.common import load_checkpoint, save_checkpoint, set_lr
 from utils.image_processing import denormalize_input
@@ -147,13 +147,14 @@ def gaussian_noise():
 
 def main(args):
     check_params(args)
+    wandb.config.update(args)
 
     print("Init models...")
 
     device = torch.device(f"cuda:{args.device}" if args.device >= 0 else "cpu")
 
-    G = Generator(args.dataset).to(device)
-    D = Discriminator(args).to(device)
+    G = AnimeGanGenerator(args.dataset).to(device)
+    D = AnimeGanDiscriminator(args).to(device)
 
     loss_tracker = LossSummary()
 
@@ -293,7 +294,6 @@ def main(args):
 if __name__ == "__main__":
     wandb.init(project="anime-gan", entity="vadbeg")
     args = parse_args()
-    wandb.config = args
 
     print("# ==== Train Config ==== #")
     for arg in vars(args):

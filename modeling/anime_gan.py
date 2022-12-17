@@ -12,9 +12,9 @@ from modeling.conv_blocks import (
 from utils.common import initialize_weights
 
 
-class Generator(nn.Module):
+class AnimeGanGenerator(nn.Module):
     def __init__(self, dataset=""):
-        super(Generator, self).__init__()
+        super(AnimeGanGenerator, self).__init__()
         self.name = f"generator_{dataset}"
         bias = False
 
@@ -61,9 +61,9 @@ class Generator(nn.Module):
         return img
 
 
-class Discriminator(nn.Module):
+class AnimeGanDiscriminator(nn.Module):
     def __init__(self, args):
-        super(Discriminator, self).__init__()
+        super(AnimeGanDiscriminator, self).__init__()
         self.name = f"discriminator_{args.dataset}"
         self.bias = False
         channels = 32

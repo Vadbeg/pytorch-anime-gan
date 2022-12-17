@@ -8,7 +8,7 @@ from cv2 import cv2
 from moviepy.video.io.VideoFileClip import VideoFileClip
 from tqdm import tqdm
 
-from modeling.anime_gan import Generator
+from modeling.anime_gan import AnimeGanGenerator
 from utils import read_image
 from utils.common import load_weight
 from utils.image_processing import denormalize_input, normalize_input, resize_image
@@ -26,7 +26,7 @@ VALID_FORMATS = {
 
 class Transformer:
     def __init__(self, weight="hayao", add_mean=False, device="cuda"):
-        self.G = Generator()
+        self.G = AnimeGanGenerator()
         self._device = device
 
         if cuda_available:
