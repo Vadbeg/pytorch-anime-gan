@@ -64,13 +64,17 @@ class AnimeGanLoss:
         ]
 
     def compute_loss_D(
-        self, fake_img_d, real_anime_d, real_anime_gray_d, real_anime_smooth_gray_d
+        self,
+        fake_img_d,
+        real_anime_d,
+        real_anime_gray_d,
+        # real_anime_smooth_gray_d
     ):
         return self.wadvd * (
             self.adv_loss_d_real(real_anime_d)
             + self.adv_loss_d_fake(fake_img_d)
             + self.adv_loss_d_fake(real_anime_gray_d)
-            + 0.2 * self.adv_loss_d_fake(real_anime_smooth_gray_d)
+            # + 0.2 * self.adv_loss_d_fake(real_anime_smooth_gray_d)
         )
 
     def content_loss_vgg(self, image, recontruction):

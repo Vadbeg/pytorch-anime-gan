@@ -12,7 +12,7 @@ from tqdm import tqdm
 from dataset import AnimeDataSet
 from modeling.anime_gan import Discriminator, Generator
 from modeling.losses import AnimeGanLoss, LossSummary
-from utils.common import initialize_weights, load_checkpoint, save_checkpoint, set_lr
+from utils.common import load_checkpoint, save_checkpoint, set_lr
 from utils.image_processing import denormalize_input
 
 gaussian_mean = torch.tensor(0.0)
@@ -21,7 +21,9 @@ gaussian_std = torch.tensor(0.1)
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset", type=str, default="Hayao")
+    parser.add_argument("--dataset", type=str, default="style")
+    parser.add_argument("--photo_dir", type=str)
+    parser.add_argument("--style_dir", type=str)
     parser.add_argument("--device", type=int, default=-1)
     parser.add_argument("--data-dir", type=str, default="/content/dataset")
     parser.add_argument("--epochs", type=int, default=100)
@@ -57,19 +59,27 @@ def parse_args():
 
 
 def collate_fn(batch):
-    img, anime, anime_gray, anime_smt_gray = zip(*batch)
+    # img, anime, anime_gray, anime_smt_gray = zip(*batch)
+    # return (
+    #     torch.stack(img, 0),
+    #     torch.stack(anime, 0),
+    #     torch.stack(anime_gray, 0),
+    #     torch.stack(anime_smt_gray, 0),
+    # )
+
+    img, anime, anime_gray = zip(*batch)
     return (
         torch.stack(img, 0),
         torch.stack(anime, 0),
         torch.stack(anime_gray, 0),
-        torch.stack(anime_smt_gray, 0),
+        # torch.stack(anime_smt_gray, 0),
     )
 
 
 def check_params(args):
-    data_path = os.path.join(args.data_dir, args.dataset)
-    if not os.path.exists(data_path):
-        raise FileNotFoundError(f"Dataset not found {data_path}")
+    # data_path = os.path.join(args.data_dir, args.dataset)
+    # if not os.path.exists(data_path):
+    #     raise FileNotFoundError(f"Dataset not found {data_path}")
 
     if not os.path.exists(args.save_image_dir):
         print(f"* {args.save_image_dir} does not exist, creating...")
@@ -195,12 +205,13 @@ def main(args):
             continue
 
         loss_tracker.reset()
-        for img, anime, anime_gray, anime_smt_gray in bar:
+        # for img, anime, anime_gray, anime_smt_gray in bar:
+        for img, anime, anime_gray in bar:
             # To cuda
             img = img.to(device)
             anime = anime.to(device)
             anime_gray = anime_gray.to(device)
-            anime_smt_gray = anime_smt_gray.to(device)
+            # anime_smt_gray = anime_smt_gray.to(device)
 
             # ---------------- TRAIN D ---------------- #
             optimizer_d.zero_grad()
@@ -211,15 +222,18 @@ def main(args):
                 fake_img += gaussian_noise()
                 anime += gaussian_noise()
                 anime_gray += gaussian_noise()
-                anime_smt_gray += gaussian_noise()
+                # anime_smt_gray += gaussian_noise()
 
             fake_d = D(fake_img)
             real_anime_d = D(anime)
             real_anime_gray_d = D(anime_gray)
-            real_anime_smt_gray_d = D(anime_smt_gray)
+            # real_anime_smt_gray_d = D(anime_smt_gray)
 
             loss_d = loss_fn.compute_loss_D(
-                fake_d, real_anime_d, real_anime_gray_d, real_anime_smt_gray_d
+                fake_d,
+                real_anime_d,
+                real_anime_gray_d,
+                # real_anime_smt_gray_d
             )
 
             loss_d.backward()
