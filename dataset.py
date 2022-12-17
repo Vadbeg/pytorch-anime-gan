@@ -48,11 +48,11 @@ class AnimeDataSet(Dataset):
         # self.smooth = f"{anime_dir}/smooth"
         # self.dummy = torch.zeros(3, 256, 256)
 
-        self._photo_limit = 20
-        self._style_limit = 20
+        # self._photo_limit = 20
+        # self._style_limit = 20
 
-        # self._photo_limit = 3500
-        # self._style_limit = 3500
+        self._photo_limit = 3500
+        self._style_limit = 3500
 
         for opt in [
             self.photo,

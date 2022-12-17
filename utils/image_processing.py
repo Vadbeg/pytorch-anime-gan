@@ -102,7 +102,7 @@ def compute_data_mean(data_folder):
     if not os.path.exists(data_folder):
         raise FileNotFoundError(f"Folder {data_folder} does not exits")
 
-    image_files = os.listdir(data_folder)[:50]
+    image_files = os.listdir(data_folder)
     total = np.zeros(3)
 
     print(f"Compute mean (R, G, B) from {len(image_files)} images")
