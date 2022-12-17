@@ -5,6 +5,7 @@ from multiprocessing import cpu_count
 import numpy as np
 import torch
 import torch.optim as optim
+import wandb
 from cv2 import cv2
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -106,6 +107,7 @@ def save_samples(
 
     max_iter = (max_imgs // args.batch_size) + 1
     fake_imgs = []
+    real_imgs = []
 
     for i, (img, *_) in enumerate(loader):
         with torch.no_grad():
@@ -115,14 +117,28 @@ def save_samples(
             fake_img = fake_img.transpose(0, 2, 3, 1)
             fake_imgs.append(denormalize_input(fake_img, dtype=np.int16))
 
+            real_img = img.detach().cpu().numpy().transpose(0, 2, 3, 1)
+            real_imgs.append(denormalize_input(real_img, dtype=np.int16))
+
         if i + 1 == max_iter:
             break
 
     fake_imgs = np.concatenate(fake_imgs, axis=0)
+    real_imgs = np.concatenate(real_imgs, axis=0)
 
-    for i, img in enumerate(fake_imgs):
+    for i, curr_fake_img in enumerate(fake_imgs):
         save_path = os.path.join(args.save_image_dir, f"{subname}_{i}.jpg")
-        cv2.imwrite(save_path, img[..., ::-1])
+
+        curr_real_image_wandb = wandb.Image(real_imgs[i], caption="Real image")
+        curr_fake_image_wandb = wandb.Image(curr_fake_img, caption="Generated image")
+        wandb.log(
+            {
+                "real_img": curr_real_image_wandb,
+                "fake_img": curr_fake_image_wandb,
+            }
+        )
+
+        cv2.imwrite(save_path, curr_fake_img[..., ::-1])
 
 
 def gaussian_noise():
@@ -236,6 +252,8 @@ def main(args):
                 # real_anime_smt_gray_d
             )
 
+            wandb.log({"loss_d": loss_d})
+
             loss_d.backward()
             optimizer_d.step()
 
@@ -252,6 +270,8 @@ def main(args):
             )
 
             loss_g = adv_loss + con_loss + gra_loss + col_loss
+
+            wandb.log({"loss_g": loss_g})
 
             loss_g.backward()
             optimizer_g.step()
@@ -271,7 +291,9 @@ def main(args):
 
 
 if __name__ == "__main__":
+    wandb.init(project="anime-gan", entity="vadbeg")
     args = parse_args()
+    wandb.config = args
 
     print("# ==== Train Config ==== #")
     for arg in vars(args):
